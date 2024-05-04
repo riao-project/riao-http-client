@@ -21,6 +21,9 @@
 		"script": "ts-node scripts",
 		"publish": "npm run script -- publish"
 	},
+	"dependencies": {
+		"@riao/server-contract": "file:../riao-server-contract/src"
+	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
 		"@types/jasmine": "^4.3.0",
