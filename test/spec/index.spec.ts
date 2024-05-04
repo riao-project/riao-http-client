@@ -1,7 +1,7 @@
 import 'jasmine';
 import * as index from '../../src';
 
-describe('{{project-name}}', () => {
+describe('riao-http-client', () => {
 	it('exports a', () => {
 		expect(index.a).toBeTrue();
 	});
