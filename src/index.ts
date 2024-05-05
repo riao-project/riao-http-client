@@ -69,6 +69,22 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 
 		const response = await fetch(fullpath, fetchOptions);
 
+		// TODO: Error handling
+		if (response.status >= 400) {
+			throw new Error(
+				'Request failed: ' +
+					JSON.stringify({
+						request: options,
+						fetchOptions: fetchOptions,
+						response: {
+							status: response.status,
+							statusText: response.statusText,
+							body: response.body,
+						},
+					})
+			);
+		}
+
 		if (options.method === 'DELETE') {
 			return response.body;
 		}
