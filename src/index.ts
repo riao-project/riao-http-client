@@ -52,6 +52,14 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 		}
 
 		if (options.path) {
+			if (!fullpath.endsWith('/')) {
+				fullpath += '/';
+			}
+
+			if (options.path.startsWith('/')) {
+				options.path = options.path.replace('/', '');
+			}
+
 			fullpath += options.path;
 		}
 
@@ -86,7 +94,7 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 	): Promise<ServerContract.GetOneResponse> {
 		return <T>await this.request({
 			method: 'GET',
-			path: <string>request.params.id,
+			path: '' + request.params.id,
 			...request,
 		});
 	}
@@ -105,7 +113,7 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 	): Promise<ServerContract.PatchOneResponse<T>> {
 		return <T>await this.request({
 			method: 'PATCH',
-			path: <string>request.params.id,
+			path: '' + request.params.id,
 			...request,
 		});
 	}
@@ -115,7 +123,7 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 	): Promise<ServerContract.DeleteOneResponse> {
 		await this.request({
 			method: 'DELETE',
-			path: <string>request.params.id,
+			path: '' + request.params.id,
 			...request,
 		});
 	}
