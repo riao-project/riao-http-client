@@ -1,26 +1,44 @@
-import {
-	DataQuery,
-	DeleteOneResponse,
-	GetManyResponse,
-	GetOneResponse,
-	PatchOneResponse,
-	PostOneResponse,
-} from '@riao/server-contract';
+import * as ServerContract from '@riao/server-contract';
 
 export type DatabaseRecordId = number | string;
 export type DatabaseRecord = Record<string, any>;
 
-interface RiaoHttpRequest {
-	url: string;
+export interface RiaoHttpRequest {}
+
+export interface RiaoRawHttpRequest extends RiaoHttpRequest {
+	url?: string;
+	path?: string;
 	method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
 	body?: any;
 	query?: Record<string, any>;
 }
 
+export type RiaoCrudHttpRequest = RiaoHttpRequest & Partial<RiaoRawHttpRequest>;
+
+export type GetManyRequest<T extends DatabaseRecord = DatabaseRecord> =
+	ServerContract.GetManyRequest<T> & RiaoCrudHttpRequest;
+
+export type GetOneRequest<T extends DatabaseRecord = DatabaseRecord> =
+	ServerContract.GetOneRequest<T> & RiaoCrudHttpRequest;
+
+export type PostOneRequest<T extends DatabaseRecord = DatabaseRecord> =
+	ServerContract.PostOneRequest<T> & RiaoCrudHttpRequest;
+
+export type PatchOneRequest<T extends DatabaseRecord = DatabaseRecord> =
+	ServerContract.PatchOneRequest<T> & RiaoCrudHttpRequest;
+
+export type DeleteOneRequest = ServerContract.DeleteOneRequest &
+	RiaoCrudHttpRequest;
+
+export type ActionRequest = ServerContract.PostRequest & RiaoCrudHttpRequest;
+
 export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 	public url = '';
+	public auth = '';
 
-	public async request(options: RiaoHttpRequest): Promise<unknown> {
+	public async request(options: RiaoRawHttpRequest): Promise<unknown> {
+		let fullpath = options.url ?? this.url;
+
 		const fetchOptions: RequestInit = {
 			method: options.method,
 			headers: {
@@ -33,11 +51,15 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 			fetchOptions.body = JSON.stringify(options.body);
 		}
 
-		if (options.query && Object.keys(options.query).length) {
-			options.url += this.serializeQuery(options.query);
+		if (options.path) {
+			fullpath += options.path;
 		}
 
-		const response = await fetch(options.url, fetchOptions);
+		if (options.query && Object.keys(options.query).length) {
+			fullpath += this.serializeQuery(options.query);
+		}
+
+		const response = await fetch(fullpath, fetchOptions);
 
 		if (options.method === 'DELETE') {
 			return response.body;
@@ -50,55 +72,58 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 		return '?' + new URLSearchParams(params);
 	}
 
-	public async getMany(query: DataQuery<T>): Promise<GetManyResponse<T>> {
+	public async getMany(
+		request: GetManyRequest<T>
+	): Promise<ServerContract.GetManyResponse<T>> {
 		return <T[]>await this.request({
 			method: 'GET',
-			url: this.url,
-			query,
+			...request,
 		});
 	}
 
 	public async getOne(
-		id: DatabaseRecordId,
-		query?: DataQuery<T>
-	): Promise<GetOneResponse> {
+		request: GetOneRequest<T>
+	): Promise<ServerContract.GetOneResponse> {
 		return <T>await this.request({
 			method: 'GET',
-			url: `${this.url}/${id}`,
-			query,
+			path: <string>request.params.id,
+			...request,
 		});
 	}
 
-	public async postOne(record: Partial<T>): Promise<PostOneResponse<T>> {
+	public async postOne(
+		request: PostOneRequest<T>
+	): Promise<ServerContract.PostOneResponse<T>> {
 		return <T>await this.request({
 			method: 'POST',
-			url: this.url,
-			body: record,
+			...request,
 		});
 	}
 
 	public async patchOne(
-		id: DatabaseRecordId,
-		data: Partial<T>
-	): Promise<PatchOneResponse<T>> {
+		request: PatchOneRequest<T>
+	): Promise<ServerContract.PatchOneResponse<T>> {
 		return <T>await this.request({
 			method: 'PATCH',
-			url: `${this.url}/${id}`,
-			body: data,
+			path: <string>request.params.id,
+			...request,
 		});
 	}
 
-	public async deleteOne(id: DatabaseRecordId): Promise<DeleteOneResponse> {
+	public async deleteOne(
+		request: DeleteOneRequest
+	): Promise<ServerContract.DeleteOneResponse> {
 		await this.request({
 			method: 'DELETE',
-			url: `${this.url}/${id}`,
+			path: <string>request.params.id,
+			...request,
 		});
 	}
 
-	public async action(action: string, request: any | T) {
+	public async action(action: string, request: ActionRequest) {
 		return await this.request({
 			method: 'POST',
-			url: `${this.url}/${action}`,
+			path: action,
 			...request,
 		});
 	}

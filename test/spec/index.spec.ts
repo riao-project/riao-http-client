@@ -2,7 +2,7 @@ import 'jasmine';
 import { RiaoHttpClient } from '../../src';
 
 class TestClient extends RiaoHttpClient {
-	url = 'http://localhost:3000/api/v1/users';
+	url = 'http://localhost:3000/api/v1/users/';
 }
 
 describe('Client', () => {
@@ -18,7 +18,7 @@ describe('Client', () => {
 	});
 
 	it('can get many', async () => {
-		expect(await userRepo.getMany({ limit: 5 })).toEqual([
+		expect(await userRepo.getMany({ query: { limit: 5 } })).toEqual([
 			{ id: 1, username: 'test1', password: 'password1234' },
 			{ id: 2, username: 'test2', password: 'password1234' },
 			{ id: 3, username: 'test3', password: 'password1234' },
@@ -28,7 +28,7 @@ describe('Client', () => {
 	});
 
 	it('can get one', async () => {
-		expect(await userRepo.getOne(1)).toEqual({
+		expect(await userRepo.getOne({ params: { id: 1 } })).toEqual({
 			id: 1,
 			username: 'test1',
 			password: 'password1234',
@@ -37,8 +37,10 @@ describe('Client', () => {
 
 	it('can post one', async () => {
 		const user = await userRepo.postOne({
-			username: 'tom@test.com',
-			password: 'password1234',
+			body: {
+				username: 'tom@test.com',
+				password: 'password1234',
+			},
 		});
 		expect(user.id).toBeGreaterThanOrEqual(5);
 		expect(user.username).toEqual('tom@test.com');
@@ -47,7 +49,12 @@ describe('Client', () => {
 
 	it('can patch one', async () => {
 		expect(
-			await userRepo.patchOne(7, { username: 'tomupdated@test.com' })
+			await userRepo.patchOne({
+				params: { id: 7 },
+				body: {
+					username: 'tomupdated@test.com',
+				},
+			})
 		).toEqual(<any>{
 			id: 7,
 			username: 'tomupdated@test.com',
@@ -56,7 +63,9 @@ describe('Client', () => {
 	});
 
 	it('can delete one', async () => {
-		expect(await userRepo.deleteOne(8)).toEqual(undefined);
+		expect(await userRepo.deleteOne({ params: { id: 8 } })).toEqual(
+			undefined
+		);
 	});
 
 	it('can login', async () => {
