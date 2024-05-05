@@ -3,7 +3,9 @@ import * as ServerContract from '@riao/server-contract';
 export type DatabaseRecordId = number | string;
 export type DatabaseRecord = Record<string, any>;
 
-export interface RiaoHttpRequest {}
+export interface RiaoHttpRequest {
+	withAccessToken?: boolean | string;
+}
 
 export interface RiaoRawHttpRequest extends RiaoHttpRequest {
 	url?: string;
@@ -34,7 +36,7 @@ export type ActionRequest = ServerContract.PostRequest & RiaoCrudHttpRequest;
 
 export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 	public url = '';
-	public auth = '';
+	public accessToken?: string;
 
 	public async request(options: RiaoRawHttpRequest): Promise<unknown> {
 		let fullpath = options.url ?? this.url;
@@ -65,6 +67,25 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 
 		if (options.query && Object.keys(options.query).length) {
 			fullpath += this.serializeQuery(options.query);
+		}
+
+		if (options.withAccessToken) {
+			let token: string;
+
+			if (typeof options.withAccessToken === 'string') {
+				token = options.withAccessToken;
+			}
+			else if (options.withAccessToken === true) {
+				if (!this.accessToken) {
+					throw new Error(
+						'Request passed withAccessToken: true, but no access token exists'
+					);
+				}
+
+				token = this.accessToken;
+			}
+
+			fetchOptions.headers['Authorization'] = 'Bearer ' + token;
 		}
 
 		const response = await fetch(fullpath, fetchOptions);

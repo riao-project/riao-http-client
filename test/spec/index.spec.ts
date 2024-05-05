@@ -78,4 +78,17 @@ describe('Client', () => {
 			})
 		).toEqual({});
 	});
+
+	it('can pass access token', async () => {
+		expect(
+			await userRepo.getOne({
+				params: { id: 1 },
+				withAccessToken: 'asdf',
+			})
+		).toEqual({
+			id: 1,
+			username: 'test1',
+			password: 'password1234',
+		});
+	});
 });
