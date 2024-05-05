@@ -1,24 +1,20 @@
 import {
-	ApiRequest,
-	DeleteOneRequest,
+	DataQuery,
 	DeleteOneResponse,
-	GetManyRequest,
 	GetManyResponse,
-	GetOneRequest,
 	GetOneResponse,
-	PatchOneRequest,
 	PatchOneResponse,
-	PostOneRequest,
 	PostOneResponse,
 } from '@riao/server-contract';
 
+export type DatabaseRecordId = number | string;
 export type DatabaseRecord = Record<string, any>;
 
 interface RiaoHttpRequest {
 	url: string;
 	method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
 	body?: any;
-	queryParams?: Record<string, any>;
+	query?: Record<string, any>;
 }
 
 export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
@@ -37,8 +33,8 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 			fetchOptions.body = JSON.stringify(options.body);
 		}
 
-		if (options.queryParams && Object.keys(options.queryParams).length) {
-			options.url += this.queryParams(options.queryParams);
+		if (options.query && Object.keys(options.query).length) {
+			options.url += this.serializeQuery(options.query);
 		}
 
 		const response = await fetch(options.url, fetchOptions);
@@ -50,53 +46,52 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 		return response.json();
 	}
 
-	protected queryParams(params: Record<string, any>) {
+	protected serializeQuery(params: Record<string, any>) {
 		return '?' + new URLSearchParams(params);
 	}
 
-	public async getMany(
-		request: GetManyRequest<T>
-	): Promise<GetManyResponse<T>> {
+	public async getMany(query: DataQuery<T>): Promise<GetManyResponse<T>> {
 		return <T[]>await this.request({
 			method: 'GET',
 			url: this.url,
-			queryParams: request,
+			query,
 		});
 	}
 
-	public async getOne(request: GetOneRequest): Promise<GetOneResponse> {
+	public async getOne(
+		id: DatabaseRecordId,
+		query?: DataQuery<T>
+	): Promise<GetOneResponse> {
 		return <T>await this.request({
 			method: 'GET',
-			url: `${this.url}/${request.id}`,
+			url: `${this.url}/${id}`,
+			query,
 		});
 	}
 
-	public async postOne(
-		request: PostOneRequest<T>
-	): Promise<PostOneResponse<T>> {
+	public async postOne(record: Partial<T>): Promise<PostOneResponse<T>> {
 		return <T>await this.request({
 			method: 'POST',
 			url: this.url,
-			body: request,
+			body: record,
 		});
 	}
 
 	public async patchOne(
-		request: PatchOneRequest<T>
+		id: DatabaseRecordId,
+		data: Partial<T>
 	): Promise<PatchOneResponse<T>> {
 		return <T>await this.request({
 			method: 'PATCH',
-			url: `${this.url}/${request.id}`,
-			body: request.data,
+			url: `${this.url}/${id}`,
+			body: data,
 		});
 	}
 
-	public async deleteOne(
-		request: DeleteOneRequest
-	): Promise<DeleteOneResponse> {
+	public async deleteOne(id: DatabaseRecordId): Promise<DeleteOneResponse> {
 		await this.request({
 			method: 'DELETE',
-			url: `${this.url}/${request.id}`,
+			url: `${this.url}/${id}`,
 		});
 	}
 
@@ -104,7 +99,7 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 		return await this.request({
 			method: 'POST',
 			url: `${this.url}/${action}`,
-			body: request,
+			...request,
 		});
 	}
 }

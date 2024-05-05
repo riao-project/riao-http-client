@@ -28,7 +28,7 @@ describe('Client', () => {
 	});
 
 	it('can get one', async () => {
-		expect(await userRepo.getOne({ id: 1 })).toEqual({
+		expect(await userRepo.getOne(1)).toEqual({
 			id: 1,
 			username: 'test1',
 			password: 'password1234',
@@ -47,10 +47,7 @@ describe('Client', () => {
 
 	it('can patch one', async () => {
 		expect(
-			await userRepo.patchOne({
-				id: 7,
-				data: { username: 'tomupdated@test.com' },
-			})
+			await userRepo.patchOne(7, { username: 'tomupdated@test.com' })
 		).toEqual(<any>{
 			id: 7,
 			username: 'tomupdated@test.com',
@@ -59,18 +56,16 @@ describe('Client', () => {
 	});
 
 	it('can delete one', async () => {
-		expect(
-			await userRepo.deleteOne({
-				id: 8,
-			})
-		).toEqual(undefined);
+		expect(await userRepo.deleteOne(8)).toEqual(undefined);
 	});
 
 	it('can login', async () => {
 		expect(
 			await userRepo.action('login', {
-				username: 'login-user',
-				password: 'password1234',
+				body: {
+					username: 'login-user',
+					password: 'password1234',
+				},
 			})
 		).toEqual({});
 	});
