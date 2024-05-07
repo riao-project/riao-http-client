@@ -86,8 +86,8 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 			}
 
 			fetchOptions.headers = {
-				Authorization: 'Bearer' + token
-			}
+				Authorization: 'Bearer' + token,
+			};
 		}
 
 		const response = await fetch(fullpath, fetchOptions);

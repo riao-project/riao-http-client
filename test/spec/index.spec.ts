@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import 'jasmine';
 import { RiaoHttpClient } from '../../src';
 

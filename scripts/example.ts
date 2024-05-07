@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { RiaoHttpClient } from '../src';
 
 export class User {
@@ -21,20 +23,21 @@ const userRepo = new UserHttpClient();
  * Do something!
  */
 export default async function example(): Promise<void> {
-	/* eslint-disable-next-line no-console */
 	console.log('Hello!');
 
 	// Create a single user
-	const newUser = await userRepo.postOne(user);
+	const newUser = await userRepo.postOne({ body: user });
 	console.log('Created user', newUser);
 
 	// Get all users
-	const users = await userRepo.getMany({ limit: 3 });
+	const users = await userRepo.getMany({ query: { limit: 3 } });
 	console.log('Got all users', users);
 
 	// Get one user
 	if (newUser.id) {
-		const getNewUser = await userRepo.getOne({ id: newUser.id });
+		const getNewUser = await userRepo.getOne({
+			params: { id: newUser.id },
+		});
 		console.log('Get new user', getNewUser);
 	}
 	else {
@@ -43,17 +46,19 @@ export default async function example(): Promise<void> {
 
 	// Login
 	if (newUser.id) {
-		await userRepo.action('login', <User>{
-			username: 'bob',
-			password: 'password123',
+		await userRepo.action('login', {
+			body: {
+				username: 'bob',
+				password: 'password123',
+			},
 		});
 	}
 
 	// Patch one user
 	if (newUser.id) {
 		const patchedUser = await userRepo.patchOne({
-			id: newUser.id,
-			data: { username: 'patched' },
+			params: { id: newUser.id },
+			body: { username: 'patched' },
 		});
 		console.log('Patched new user', patchedUser);
 	}
@@ -64,7 +69,7 @@ export default async function example(): Promise<void> {
 	// Delete one user
 	if (newUser.id) {
 		await userRepo.deleteOne({
-			id: newUser.id,
+			params: { id: newUser.id },
 		});
 		console.log('Deleted the user!');
 	}
