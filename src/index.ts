@@ -70,22 +70,24 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 		}
 
 		if (options.withAccessToken) {
-			let token: string;
+			let token = '';
 
 			if (typeof options.withAccessToken === 'string') {
 				token = options.withAccessToken;
 			}
-			else if (options.withAccessToken === true) {
-				if (!this.accessToken) {
-					throw new Error(
-						'Request passed withAccessToken: true, but no access token exists'
-					);
-				}
-
+			else if (options.withAccessToken === true && this.accessToken) {
 				token = this.accessToken;
 			}
 
-			fetchOptions.headers['Authorization'] = 'Bearer ' + token;
+			if (!token.length) {
+				throw new Error(
+					'Request passed withAccessToken: true, but no access token exists'
+				);
+			}
+
+			fetchOptions.headers = {
+				Authorization: 'Bearer' + token
+			}
 		}
 
 		const response = await fetch(fullpath, fetchOptions);
