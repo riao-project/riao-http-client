@@ -1,5 +1,5 @@
 {
-	"name": "riao-http-client",
+	"name": "@riao/http-client",
 	"version": "1.0.0",
 	"description": "riao-http-client",
 	"private": "true",
