@@ -9,7 +9,7 @@
 		"library": "1.0.0"
 	},
 	"scripts": {
-		"build": "tsc",
+		"build": "tsc && vite build",
 		"start": "ts-node examples/index",
 		"test": "npm run lint && npm run build && nyc npm run test:run",
 		"test:run": "jasmine --config=jasmine.json",
@@ -41,7 +41,8 @@
 		"ts-script": "^1.0.0",
 		"ts-tiny-log": "^1.1.1",
 		"typedoc": "^0.23.21",
-		"typescript": "^4.9.3"
+		"typescript": "^4.9.3",
+		"vite": "^5.0.7"
 	},
 	"repository": {
 		"type": "git",

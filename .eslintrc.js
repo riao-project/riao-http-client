@@ -1,5 +1,6 @@
 module.exports = {
 	root: true,
+	ignorePatterns: ["vite.config.ts"],
 	parser: "@typescript-eslint/parser",
 	plugins: [
 		"@typescript-eslint"
@@ -9,7 +10,7 @@ module.exports = {
 		"plugin:@typescript-eslint/recommended"
 	],
 	parserOptions: {
-		project: "./tsconfig.json",
+		project: ["./tsconfig.json"],
 		tsconfigRootDir: __dirname,
 	},
 	rules: {
