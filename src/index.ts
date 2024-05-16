@@ -1,13 +1,17 @@
 import * as ServerContract from '@riao/server-contract';
+import { AuthenticationError, HttpError } from './errors';
+import { ConnectionError } from './errors/connection-error';
+
+export * from './errors';
 
 export type DatabaseRecordId = number | string;
 export type DatabaseRecord = Record<string, any>;
 
-export interface RiaoHttpRequest {
+export interface RiaoHttpRequestOptions {
 	withAccessToken?: boolean | string;
 }
 
-export interface RiaoRawHttpRequest extends RiaoHttpRequest {
+export interface RiaoRawHttpRequestOptions extends RiaoHttpRequestOptions {
 	url?: string;
 	path?: string;
 	method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -15,7 +19,14 @@ export interface RiaoRawHttpRequest extends RiaoHttpRequest {
 	query?: Record<string, any>;
 }
 
-export type RiaoCrudHttpRequest = RiaoHttpRequest & Partial<RiaoRawHttpRequest>;
+export interface RiaoHttpRequest {
+	request: RiaoRawHttpRequestOptions;
+	fetchOptions: RequestInit;
+	response?: Response;
+}
+
+export type RiaoCrudHttpRequest = RiaoHttpRequestOptions &
+	Partial<RiaoRawHttpRequestOptions>;
 
 export type GetManyRequest<T extends DatabaseRecord = DatabaseRecord> =
 	ServerContract.GetManyRequest<T> & RiaoCrudHttpRequest;
@@ -38,7 +49,7 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 	public url = '';
 	public accessToken?: string;
 
-	public async request(options: RiaoRawHttpRequest): Promise<unknown> {
+	public async request(options: RiaoRawHttpRequestOptions): Promise<unknown> {
 		let fullpath = options.url ?? this.url;
 
 		const fetchOptions: RequestInit = {
@@ -86,27 +97,28 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 			}
 
 			fetchOptions.headers = {
-				Authorization: 'Bearer' + token,
+				Authorization: 'Bearer  ' + token,
 			};
 		}
 
-		const response = await fetch(fullpath, fetchOptions);
+		let response: Response;
 
-		// TODO: Error handling
-		if (response.status >= 400) {
-			throw new Error(
-				'Request failed: ' +
-					JSON.stringify({
-						request: options,
-						fetchOptions: fetchOptions,
-						response: {
-							status: response.status,
-							statusText: response.statusText,
-							body: response.body,
-						},
-					})
-			);
+		try {
+			response = await fetch(fullpath, fetchOptions);
 		}
+		catch (e) {
+			throw new ConnectionError(e.message, {
+				http: {
+					request: options,
+					fetchOptions,
+					response,
+				},
+				userMessage:
+					'Please check your internet connection and try again.',
+			});
+		}
+
+		this.checkResponse({ request: options, fetchOptions, response });
 
 		if (options.method === 'DELETE') {
 			return response.body;
@@ -173,5 +185,24 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 			path: action,
 			...request,
 		});
+	}
+
+	public checkResponse(http: RiaoHttpRequest) {
+		if (http.response.status >= 400) {
+			if (http.response.status === 401) {
+				throw new AuthenticationError('Unauthenticated', {
+					http,
+					userMessage:
+						'You\'re not signed in. Please sign-in and try again.',
+				});
+			}
+			else {
+				throw new HttpError('Request failed', {
+					http,
+					userMessage:
+						'Oops! Something went wrong. Please refresh and try again.',
+				});
+			}
+		}
 	}
 }
