@@ -97,6 +97,7 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 			}
 
 			fetchOptions.headers = {
+				...fetchOptions.headers,
 				Authorization: 'Bearer  ' + token,
 			};
 		}
