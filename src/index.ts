@@ -34,6 +34,9 @@ export type GetManyRequest<T extends DatabaseRecord = DatabaseRecord> =
 export type GetOneRequest<T extends DatabaseRecord = DatabaseRecord> =
 	ServerContract.GetOneRequest<T> & RiaoCrudHttpRequest;
 
+export type SearchRequest<T extends DatabaseRecord = DatabaseRecord> =
+	ServerContract.SearchRequest<T> & RiaoCrudHttpRequest;
+
 export type PostOneRequest<T extends DatabaseRecord = DatabaseRecord> =
 	ServerContract.PostOneRequest<T> & RiaoCrudHttpRequest;
 
@@ -129,7 +132,13 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 	}
 
 	protected serializeQuery(params: Record<string, any>) {
-		return '?' + new URLSearchParams(params);
+		const qp = new URLSearchParams();
+
+		for (const key in params) {
+			qp.append(key, JSON.stringify(params[key]));
+		}
+
+		return '?' + qp;
 	}
 
 	public async getMany(
@@ -147,6 +156,16 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 		return <T>await this.request({
 			method: 'GET',
 			path: '' + request.params.id,
+			...request,
+		});
+	}
+
+	public async search(
+		request: ServerContract.SearchRequest<T>
+	): Promise<ServerContract.SearchResponse<T>> {
+		return <ServerContract.SearchResponse<T>>await this.request({
+			method: 'POST',
+			path: '/search',
 			...request,
 		});
 	}
