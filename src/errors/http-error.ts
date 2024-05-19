@@ -1,4 +1,4 @@
-import { RiaoHttpRequest, RiaoRawHttpRequestOptions } from 'src';
+import { RiaoHttpRequest } from '../';
 
 export interface HttpErrorOptions {
 	http: RiaoHttpRequest;
