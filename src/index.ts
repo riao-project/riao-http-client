@@ -202,7 +202,7 @@ export class RiaoHttpClient<T extends DatabaseRecord = DatabaseRecord> {
 	public async action(action: string, request: ActionRequest) {
 		return await this.request({
 			method: 'POST',
-			path: action,
+			path: 'action/' + action,
 			...request,
 		});
 	}
